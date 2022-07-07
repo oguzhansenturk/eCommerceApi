@@ -1,9 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using System.Net;
 using eCommerceApi.Application.Repositories;
-using Microsoft.AspNetCore.Http;
+using eCommerceApi.Application.ViewModels.Products;
+using eCommerceApi.Domain.Entities;
 using Microsoft.AspNetCore.Mvc;
 
 namespace eCommerceApi.API.Controllers
@@ -12,28 +10,63 @@ namespace eCommerceApi.API.Controllers
     [ApiController]
     public class ProductController : ControllerBase
     {
-        readonly private IProductWriteRepository _productWriteRepository;
-        readonly private IProductReadRepository _productReadRepository;
-
-        readonly private IOrderWriteRepository _orderWriteRepository;
-        readonly private ICustomerWriteRepository _customerWriteRepository;
+        private readonly IProductWriteRepository _productWriteRepository;
+        private readonly IProductReadRepository _productReadRepository;
         
-        public ProductController(IProductWriteRepository productWriteRepository, IProductReadRepository productReadRepository,IOrderWriteRepository orderWriteRepository,ICustomerWriteRepository customerWriteRepository)
+        public ProductController(IProductWriteRepository productWriteRepository, IProductReadRepository productReadRepository)
         {
             _productWriteRepository = productWriteRepository;
             _productReadRepository = productReadRepository;
-            _orderWriteRepository = orderWriteRepository;
-            _customerWriteRepository = customerWriteRepository;
+       
         }
 
         [HttpGet]
-        public async Task Get()
+        public Task<IActionResult> Get()
         {
-            var custId = Guid.NewGuid();
-            await _customerWriteRepository.AddAsync(new() {Id = custId, Name = "Oguz"});
-            await _orderWriteRepository.AddAsync(new() {Description = "bla bla bla", Address = "Adresses"});
-            _orderWriteRepository.SaveAsync();
+            var products = _productReadRepository.GetAll();
+            return Task.FromResult<IActionResult>(Ok(products));
         }
         
+        [HttpPost]
+        public async Task<IActionResult> Post([FromBody] VM_Product_Create? product)
+        {
+            if (product == null)
+            {
+                return BadRequest();
+            }
+            await _productWriteRepository.AddAsync(new Product()
+            {
+                Name = product.Name,
+                Price = product.Price,
+                Stock = product.Stock
+                
+            });
+            await _productWriteRepository.SaveAsync();
+            return StatusCode((int)HttpStatusCode.Created);
+        }
+        
+        [HttpPut]
+        public async Task<IActionResult> Put([FromBody] VM_Product_Update? product)
+        {
+            if (product == null)
+            {
+                return BadRequest();
+            }
+            
+            var productToUpdate = await _productReadRepository.GetByIdAsync(product.Id);
+            productToUpdate.Name = product.Name;
+            productToUpdate.Price = product.Price;
+            productToUpdate.Stock = product.Stock;
+            await _productWriteRepository.SaveAsync();
+            return StatusCode((int)HttpStatusCode.Created);
+        }
+        
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(string id)
+        {
+            await _productWriteRepository.RemoveAsync(id);
+            await _productWriteRepository.SaveAsync();
+            return StatusCode((int)HttpStatusCode.OK);
+        }
     }
 }
