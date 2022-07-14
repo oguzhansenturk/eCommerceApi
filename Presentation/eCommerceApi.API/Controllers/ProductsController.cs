@@ -8,12 +8,12 @@ namespace eCommerceApi.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ProductController : ControllerBase
+    public class ProductsController : ControllerBase
     {
         private readonly IProductWriteRepository _productWriteRepository;
         private readonly IProductReadRepository _productReadRepository;
         
-        public ProductController(IProductWriteRepository productWriteRepository, IProductReadRepository productReadRepository)
+        public ProductsController(IProductWriteRepository productWriteRepository, IProductReadRepository productReadRepository)
         {
             _productWriteRepository = productWriteRepository;
             _productReadRepository = productReadRepository;
@@ -23,17 +23,20 @@ namespace eCommerceApi.API.Controllers
         [HttpGet]
         public Task<IActionResult> Get()
         {
-            var products = _productReadRepository.GetAll();
+            var products = _productReadRepository.GetAll(false);
             return Task.FromResult<IActionResult>(Ok(products));
+        }
+        
+        [HttpGet("{id}")]
+        public Task<IActionResult> Get(string id)
+        {
+            var product = _productReadRepository.GetByIdAsync(id,false);
+            return Task.FromResult<IActionResult>(Ok(product));
         }
         
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] VM_Product_Create? product)
         {
-            if (product == null)
-            {
-                return BadRequest();
-            }
             await _productWriteRepository.AddAsync(new Product()
             {
                 Name = product.Name,
@@ -58,7 +61,7 @@ namespace eCommerceApi.API.Controllers
             productToUpdate.Price = product.Price;
             productToUpdate.Stock = product.Stock;
             await _productWriteRepository.SaveAsync();
-            return StatusCode((int)HttpStatusCode.Created);
+            return Ok();
         }
         
         [HttpDelete("{id}")]
@@ -66,7 +69,7 @@ namespace eCommerceApi.API.Controllers
         {
             await _productWriteRepository.RemoveAsync(id);
             await _productWriteRepository.SaveAsync();
-            return StatusCode((int)HttpStatusCode.OK);
+            return  Ok();
         }
     }
 }
