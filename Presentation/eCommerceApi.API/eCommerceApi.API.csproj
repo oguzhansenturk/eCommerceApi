@@ -19,6 +19,7 @@
     <ProjectReference Include="..\..\Core\eCommerceApi.Application\eCommerceApi.Application.csproj">
       <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
     </ProjectReference>
+    <ProjectReference Include="..\..\Infrastructure\eCommerceApi.Infrastructure\eCommerceApi.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Infrastructure\eCommerceApi.Persistence\eCommerceApi.Persistence.csproj">
       <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
     </ProjectReference>
